@@ -22,7 +22,7 @@ def collate_fn(dataset_items: list[dict]):
             dataset.__getitem__.
     Returns:
         result_batch (dict[Tensor]): dict, containing batch-version
-            of the tensors.
+            of the tensors. Will contain RESULT_BATCH_KEYS
     """
     result_batch = {key: [] for key in RESULT_BATCH_KEYS}
     if not dataset_items:
