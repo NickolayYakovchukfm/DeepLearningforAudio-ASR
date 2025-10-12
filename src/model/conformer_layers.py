@@ -5,6 +5,7 @@ DIVIDE_FFN_CONST = 0.5
 
 
 class ConvolutionModule(nn.Module):
+
     """
     ^ -> LayerNorm -> PWConv -> GLU -> 1D_DWConv -> BN -> Swish -> PWConv -> Dropout -> ^ +
     The convolution module contains a pointwise convolution with an expansion factor of 2 projecting the
@@ -14,21 +15,24 @@ class ConvolutionModule(nn.Module):
 
     def __init__(
         self,
-        input_dim,
-        kernel_size,
+        input_dim=256,
+        kernel_size=32,
         dropout_proba=0.1,
         expansion_factor=2,
     ):
         super.__init__()
+        padding_param = (kernel_size - 2) // 2
 
-        self.layer_norm = nn.LayerNorm()
-        self.conv_1 = nn.Conv1d()
-        self.GLu = nn.GLU()
-        self.conv_2 = nn.Conv1d()
-        self.bn = nn.BatchNorm1d()
+        self.layer_norm = nn.LayerNorm(input_dim)
+        self.conv_1 = nn.Conv1d(input_dim, input_dim * expansion_factor, 1)
+        self.GLu = nn.GLU(1)
+        self.conv_2 = nn.Conv1d(
+            input_dim, input_dim, kernel_size, padding=padding_param
+        )
+        self.bn = nn.BatchNorm1d(input_dim)
         self.swish = nn.SiLU()
-        self.conv_3 = nn.Conv1d()
-        self.dp = nn.Dropout()
+        self.conv_3 = nn.Conv1d(input_dim, input_dim, 1)
+        self.dp = nn.Dropout(p=dropout_proba)
 
     def forward(self, x):
         """
@@ -62,16 +66,15 @@ class MultiHeadSelfAttn(nn.Module):
 
     def __init__(
         self,
-        input_dim,
-        heads,
-        enc_len,
+        input_dim=256,
+        heads=4,
         dropout_proba=0.1,
     ):
         super().__init__()
 
-        self.layer_norm = nn.LayerNorm()
-        self.multiheadattn = nn.MultiheadAttention()
-        self.dropout = nn.Dropout()
+        self.layer_norm = nn.LayerNorm(input_dim)
+        self.multiheadattn = nn.MultiheadAttention(input_dim, heads, batch_first=True)
+        self.dropout = nn.Dropout(dropout_proba)
 
     def forward(self, x):
         """
@@ -82,7 +85,7 @@ class MultiHeadSelfAttn(nn.Module):
         """
         x_connect = x
         x = self.layer_norm(x)
-        x = self.multiheadattn(x)
+        x = self.multiheadattn(x, x, x)
         x = self.dropout(x)
         x += x_connect
 
@@ -98,18 +101,18 @@ class FeedForward(nn.Module):
 
     def __init__(
         self,
-        input_dim,
+        input_dim=256,
         expansion_factor=4,
         dropout_proba=0.1,
     ):
         super().__init__()
 
-        self.layer_norm = nn.LayerNorm()
-        self.linear_1 = nn.Linear()
+        self.layer_norm = nn.LayerNorm(input_dim)
+        self.linear_1 = nn.Linear(input_dim, input_dim * expansion_factor)
         self.swish = nn.SiLU()
-        self.dropout_1 = nn.Dropout()
-        self.linear_2 = nn.Linear()
-        self.dropout_2 = nn.Dropout()
+        self.dropout_1 = nn.Dropout(p=dropout_proba)
+        self.linear_2 = nn.Linear(input_dim * expansion_factor, input_dim)
+        self.dropout_2 = nn.Dropout(p=dropout_proba)
 
     def forward(self, x):
         x_connect = x
@@ -131,21 +134,23 @@ class ConformerBlock(nn.Module):
 
     def __init__(
         self,
-        input_dim,
-        heads,
-        expansion_factor_conv,
-        kernel_size,
-        expansion_factor,
-        dropout_proba,
-        enc_len,
-        expansion_factor_feedforward,
+        input_dim=256,
+        heads=4,
+        expansion_factor_conv=2,
+        kernel_size=32,
+        dropout_proba=0.1,
+        expansion_factor_feedforward=4,
     ):
         super().__init__()
 
-        self.feedforward = FeedForward()
-        self.multiheadselfattn = MultiHeadSelfAttn()
-        self.convmod = ConvolutionModule()
-        self.layer_norm = nn.LayerNorm()
+        self.feedforward = FeedForward(
+            input_dim, expansion_factor_feedforward, dropout_proba
+        )
+        self.multiheadselfattn = MultiHeadSelfAttn(input_dim, heads, dropout_proba)
+        self.convmod = ConvolutionModule(
+            input_dim, kernel_size, dropout_proba, expansion_factor_conv
+        )
+        self.layer_norm = nn.LayerNorm(input_dim)
 
     def forward(self, x):
         """
