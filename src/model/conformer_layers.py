@@ -16,12 +16,12 @@ class ConvolutionModule(nn.Module):
     def __init__(
         self,
         input_dim=256,
-        kernel_size=32,
+        kernel_size=31,
         dropout_proba=0.1,
         expansion_factor=2,
     ):
-        super.__init__()
-        padding_param = (kernel_size - 2) // 2
+        super().__init__()
+        padding_param = (kernel_size - 1) // 2
 
         self.layer_norm = nn.LayerNorm(input_dim)
         self.conv_1 = nn.Conv1d(input_dim, input_dim * expansion_factor, 1)
@@ -52,7 +52,7 @@ class ConvolutionModule(nn.Module):
         x = self.conv_3(x)
         x = self.dp(x)
         x = x.transpose(1, 2)
-        x += x_connect
+        x = x + x_connect
 
         return x
 
@@ -85,9 +85,9 @@ class MultiHeadSelfAttn(nn.Module):
         """
         x_connect = x
         x = self.layer_norm(x)
-        x = self.multiheadattn(x, x, x)
+        x, _ = self.multiheadattn(x, x, x)
         x = self.dropout(x)
-        x += x_connect
+        x = x + x_connect
 
         return x
 
@@ -122,7 +122,7 @@ class FeedForward(nn.Module):
         x = self.dropout_1(x)
         x = self.linear_2(x)
         x = self.dropout_2(x)
-        x += x_connect
+        x = x + x_connect
 
         return x
 
@@ -137,7 +137,7 @@ class ConformerBlock(nn.Module):
         input_dim=256,
         heads=4,
         expansion_factor_conv=2,
-        kernel_size=32,
+        kernel_size=31,
         dropout_proba=0.1,
         expansion_factor_feedforward=4,
     ):
@@ -159,9 +159,9 @@ class ConformerBlock(nn.Module):
         Output:
             x.shape (b, t, c)
         """
-        x += DIVIDE_FFN_CONST * self.feedforward(x)
-        x += self.multiheadselfattn(x)
-        x += self.convmod(x)
+        x = x + DIVIDE_FFN_CONST * self.feedforward(x)
+        x = x + self.multiheadselfattn(x)
+        x = x + self.convmod(x)
         x = self.layer_norm(x + DIVIDE_FFN_CONST * self.feedforward(x))
 
         return x
