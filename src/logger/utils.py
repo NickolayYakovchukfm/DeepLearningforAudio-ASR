@@ -2,7 +2,6 @@ import io
 
 import matplotlib.pyplot as plt
 import PIL
-from torchvision.transforms import ToTensor
 
 plt.switch_backend("agg")  # fix RuntimeError: main thread is not in main loop
 
@@ -35,7 +34,7 @@ def plot_images(imgs, config):
     plt.savefig(buf, format="png", bbox_inches="tight")
     buf.seek(0)
     # convert buffer to Tensor
-    image = ToTensor()(PIL.Image.open(buf))
+    image = PIL.Image.open(buf)
 
     plt.close()
 
@@ -53,14 +52,16 @@ def plot_spectrogram(spectrogram, name=None):
         image (Image): image of the spectrogram
     """
     plt.figure(figsize=(20, 5))
-    plt.pcolormesh(spectrogram)
+    plt.imshow(
+        spectrogram.log().T, origin="lower", aspect="auto", interpolation="nearest"
+    )
     plt.title(name)
     buf = io.BytesIO()
     plt.savefig(buf, format="png")
     buf.seek(0)
 
     # convert buffer to Tensor
-    image = ToTensor()(PIL.Image.open(buf))
+    image = PIL.Image.open(buf)
 
     plt.close()
 
