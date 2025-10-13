@@ -2,6 +2,7 @@ import re
 from string import ascii_lowercase
 
 import torch
+from torchaudio.models import decoder
 
 # TODO add CTC decode
 # TODO add BPE, LM, Beam Search support
@@ -57,6 +58,25 @@ class CTCTextEncoder:
             raw_text (str): raw text with empty tokens and repetitions.
         """
         return "".join([self.ind2char[int(ind)] for ind in inds]).strip()
+
+    def ctc_beam_search(self, log_probs, log_probs_length, beam_size=15):
+        log_probs = log_probs.cpu()
+        log_probs_length = log_probs_length.cpu()
+
+        beam_search = decoder.ctc_decoder(
+            lexicon=None,
+            tokens=self.vocab,
+            lm=None,
+            beam_size=beam_size,
+            blank_token=self.EMPTY_TOK,
+            sil_token=self.EMPTY_TOK,
+        )
+
+        beam_search_results = beam_search(log_probs, log_probs_length)
+        res = []
+        for beam_result in beam_search_results:
+            res.append(beam_result[0].tokens)
+        return res
 
     def ctc_decode(self, inds) -> str:
         """
