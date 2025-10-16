@@ -16,7 +16,7 @@ class ConformerModel(nn.Module):
         kernel_size=31,
         dropout_proba=0.1,
         expansion_factor_feedforward=4,
-        conformer_blocks_num=4,
+        conformer_blocks_num=10,
     ):
         super().__init__()
 
