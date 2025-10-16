@@ -4,14 +4,13 @@ import torch
 from torch import Tensor, nn
 
 
-class Gain(nn.Module):
-    def __init__(self, sample_rate=16000, *args, **kwargs):
+class PitchShift(nn.Module):
+    def __init__(self, *args, **kwargs):
         super().__init__()
-        self._aug = audiomentations.Gain(*args, **kwargs)
-        self.sample_rate = sample_rate
+        self._aug = audiomentations.PitchShift(*args, **kwargs)
 
     def __call__(self, data: Tensor):
         if isinstance(data, np.ndarray):
             data = torch.from_numpy(data)
         x = data.unsqueeze(1)
-        return self._aug(x, sample_rate=self.sample_rate).squeeze(1)
+        return self._aug(x, sample_rate=16000).squeeze(1)
