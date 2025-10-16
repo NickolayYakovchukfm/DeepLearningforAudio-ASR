@@ -1,0 +1,16 @@
+defaults:
+  - model: conformer
+  - metrics: target_metrics
+  - datasets: libri_eval_other # we do not want to run inference on training data
+  - dataloader: example
+  - transforms: example_only_instance_inf
+  - _self_
+text_encoder:
+  _target_: src.text_encoder.CTCTextEncoder
+  lm_inf_path: "4-gram.arpa"
+inferencer:
+  device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
+  device: auto # device name or "auto"
+  save_path: "libri_speech_inf_other" # any name here, can be a dataset name
+  seed: 1
+  from_pretrained: "saved/conformer_30m/checkpoint-epoch84.pth" # path to the pretrained model
