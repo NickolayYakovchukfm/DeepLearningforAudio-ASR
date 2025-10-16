@@ -14,7 +14,7 @@ from torchaudio.models import decoder
 class CTCTextEncoder:
     EMPTY_TOK = ""
 
-    def __init__(self, alphabet=None, **kwargs):
+    def __init__(self, alphabet=None, lm_inf_path="4-gram.arpa", **kwargs):
         """
         Args:
             alphabet (list): alphabet for language. If None, it will be
@@ -26,6 +26,8 @@ class CTCTextEncoder:
 
         self.alphabet = alphabet
         self.vocab = [self.EMPTY_TOK] + list(self.alphabet)
+
+        self.lm_inf_path = lm_inf_path
 
         self.ind2char = dict(enumerate(self.vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}
@@ -59,14 +61,14 @@ class CTCTextEncoder:
         """
         return "".join([self.ind2char[int(ind)] for ind in inds]).strip()
 
-    def ctc_beam_search(self, log_probs, log_probs_length, beam_size=15):
+    def ctc_beam_search(self, log_probs, log_probs_length, beam_size=80):
         log_probs = log_probs.cpu()
         log_probs_length = log_probs_length.cpu()
 
         beam_search = decoder.ctc_decoder(
             lexicon=None,
             tokens=self.vocab,
-            lm=None,
+            lm=self.lm_inf_path,
             beam_size=beam_size,
             blank_token=self.EMPTY_TOK,
             sil_token=self.EMPTY_TOK,
