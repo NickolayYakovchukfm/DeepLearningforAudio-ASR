@@ -96,6 +96,11 @@ class Trainer(BaseTrainer):
         # Note: by improving text encoder and metrics design
         # this logging can also be improved significantly
 
+        beamsearch_inds = self.text_encoder.ctc_beam_search(log_probs, log_probs_length)
+        beamsearch_texts = []
+        for beamsearch_ind in beamsearch_inds:
+            beamsearch_texts.append(self.text_encoder.decode(beamsearch_ind))
+
         argmax_inds = log_probs.cpu().argmax(-1).numpy()
         argmax_inds = [
             inds[: int(ind_len)]
@@ -103,20 +108,29 @@ class Trainer(BaseTrainer):
         ]
         argmax_texts_raw = [self.text_encoder.decode(inds) for inds in argmax_inds]
         argmax_texts = [self.text_encoder.ctc_decode(inds) for inds in argmax_inds]
-        tuples = list(zip(argmax_texts, text, argmax_texts_raw, audio_path))
+        tuples = list(
+            zip(argmax_texts, text, argmax_texts_raw, audio_path, beamsearch_texts)
+        )
 
         rows = {}
-        for pred, target, raw_pred, audio_path in tuples[:examples_to_log]:
+        for pred, target, raw_pred, audio_path, beamsearch_text in tuples[
+            :examples_to_log
+        ]:
             target = self.text_encoder.normalize_text(target)
             wer = calc_wer(target, pred) * 100
             cer = calc_cer(target, pred) * 100
+            beamsearch_wer = calc_wer(target, beamsearch_text) * 100
+            beamsearch_cer = calc_cer(target, beamsearch_text) * 100
 
             rows[Path(audio_path).name] = {
                 "target": target,
                 "raw prediction": raw_pred,
                 "predictions": pred,
+                "beamsearch_predictions": beamsearch_text,
                 "wer": wer,
                 "cer": cer,
+                "beamsearch_wer": beamsearch_wer,
+                "beamsearch_cer": beamsearch_cer,
             }
         self.writer.add_table(
             "predictions", pd.DataFrame.from_dict(rows, orient="index")
