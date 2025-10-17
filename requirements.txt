@@ -9,7 +9,12 @@ matplotlib
 pandas
 comet_ml
 hydra-core
-
+audiomentations
+pyctcdecode
+kenlm
+editdistance
+wget
+datasets
 black
 isort
 pre-commit
