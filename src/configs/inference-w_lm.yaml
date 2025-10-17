@@ -7,7 +7,7 @@ defaults:
   - _self_
 text_encoder:
   _target_: src.text_encoder.CTCTextEncoder
-  lm_inf_path: "4-gram.arpa"
+  lm_inf_path: "4gram_lowercase.arpa"
 inferencer:
   device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
   device: auto # device name or "auto"

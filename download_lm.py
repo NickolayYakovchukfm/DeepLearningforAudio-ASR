@@ -6,8 +6,8 @@ from huggingface_hub import hf_hub_download
 
 
 def fetch_language_model():
-    home_dir = os.path.expanduser("~")
-    lm_dir = os.path.join(home_dir, "language_models")
+    os.makedirs("language_models", exist_ok=True)
+    lm_dir = os.path.join("", "language_models")
     final_lm_file = os.path.join(lm_dir, "4gram_lowercase.arpa")
 
     if os.path.isfile(final_lm_file):

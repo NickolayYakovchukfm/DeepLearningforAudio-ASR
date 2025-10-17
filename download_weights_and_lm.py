@@ -1,0 +1,4 @@
+from download_lm import fetch_conformer_model_weights, fetch_language_model
+
+fetch_conformer_model_weights()
+fetch_language_model()

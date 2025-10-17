@@ -17,8 +17,8 @@ class CTCTextEncoder:
             alphabet (list): alphabet for language. If None, it will be
                 set to ascii
         """
-        fetch_conformer_model_weights()
-        fetch_language_model()
+        # fetch_conformer_model_weights()
+        # fetch_language_model()
         if alphabet is None:
             alphabet = list(ascii_lowercase + " ")
 
