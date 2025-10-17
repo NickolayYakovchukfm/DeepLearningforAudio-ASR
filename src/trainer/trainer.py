@@ -96,10 +96,11 @@ class Trainer(BaseTrainer):
         # Note: by improving text encoder and metrics design
         # this logging can also be improved significantly
 
-        beamsearch_inds = self.text_encoder.ctc_beam_search(log_probs, log_probs_length)
         beamsearch_texts = []
-        for beamsearch_ind in beamsearch_inds:
-            beamsearch_texts.append(self.text_encoder.decode(beamsearch_ind))
+        for log_proba, log_proba_length in zip(log_probs, log_probs_length):
+            beamsearch_texts.append(
+                self.text_encoder.ctc_beam_search_lm(log_proba[:log_proba_length])
+            )
 
         argmax_inds = log_probs.cpu().argmax(-1).numpy()
         argmax_inds = [

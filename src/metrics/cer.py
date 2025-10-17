@@ -30,17 +30,26 @@ class ArgmaxCERMetric(BaseMetric):
 
 
 class CER(BaseMetric):
-    def __init__(self, text_encoder, *args, **kwargs):
+    def __init__(self, text_encoder, search_by="with_lm", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text_encoder = text_encoder
+        self.search_by = search_by
 
     def __call__(
         self, log_probs: Tensor, log_probs_length: Tensor, text: List[str], **kwargs
     ):
         cers = []
-        predictions = self.text_encoder.ctc_beam_search(log_probs, log_probs_length)
-        for pred_text, target_text in zip(predictions, text):
+        for log_proba, log_proba_length, target_text in zip(
+            log_probs, log_probs_length, text
+        ):
+            if self.search_by == "with_lm":
+                pred_text = self.text_encoder.ctc_beam_search_lm(
+                    log_proba[:log_proba_length]
+                )
+            else:
+                pred_text = self.text_encoder.ctc_beam_search(
+                    log_proba[:log_proba_length]
+                )
             target_text = self.text_encoder.normalize_text(target_text)
-            pred_text = self.text_encoder.decode(pred_text)
             cers.append(calc_cer(target_text, pred_text))
         return sum(cers) / len(cers)

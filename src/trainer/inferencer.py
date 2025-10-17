@@ -142,11 +142,14 @@ class Inferencer(BaseTrainer):
         for i in range(batch_size):
             # clone because of
             # https://github.com/pytorch/pytorch/issues/1995
-            log_probs = batch["log_probs"][i].clone().unsqueeze(0)
+            log_probs = batch["log_probs"][i].clone()
             text = batch["text"][i]
-            log_probs_length = batch["log_probs_length"][i].clone().unsqueeze(0)
-            prediction = self.text_encoder.ctc_beam_search(log_probs, log_probs_length)
-            pred_text = self.text_encoder.decode(prediction[0])
+            log_probs_length = batch["log_probs_length"][i].clone()
+            # audio_path = batch["audio_path"][i]
+
+            pred_text = self.text_encoder.ctc_beam_search_lm(
+                log_probs[:log_probs_length]
+            )
 
             output = {
                 "prediction": pred_text,

@@ -2,13 +2,8 @@ import re
 from string import ascii_lowercase
 
 import torch
+from pyctcdecode import build_ctcdecoder
 from torchaudio.models import decoder
-
-# TODO add CTC decode
-# TODO add BPE, LM, Beam Search support
-# Note: think about metrics and encoder
-# The design can be remarkably improved
-# to calculate stuff more efficiently and prettier
 
 
 class CTCTextEncoder:
@@ -28,6 +23,13 @@ class CTCTextEncoder:
         self.vocab = [self.EMPTY_TOK] + list(self.alphabet)
 
         self.lm_inf_path = lm_inf_path
+        if self.lm_inf_path is not None:
+            self.decoder = build_ctcdecoder(
+                self.vocab,
+                kenlm_model_path=self.lm_inf_path,
+            )
+        else:
+            self.decoder = build_ctcdecoder(self.vocab, kenlm_model_path=None)
 
         self.ind2char = dict(enumerate(self.vocab))
         self.char2ind = {v: k for k, v in self.ind2char.items()}
@@ -61,24 +63,16 @@ class CTCTextEncoder:
         """
         return "".join([self.ind2char[int(ind)] for ind in inds]).strip()
 
-    def ctc_beam_search(self, log_probs, log_probs_length, beam_size=80):
-        log_probs = log_probs.cpu()
-        log_probs_length = log_probs_length.cpu()
+    def ctc_beam_search(self, log_probs, beam_size=100):
+        if isinstance(log_probs, torch.Tensor):
+            log_probs = log_probs.detach().cpu().numpy()
+        result = self.decoder.decode(log_probs, beam_size)
+        return result
 
-        beam_search = decoder.ctc_decoder(
-            lexicon=None,
-            tokens=self.vocab,
-            lm=self.lm_inf_path,
-            beam_size=beam_size,
-            blank_token=self.EMPTY_TOK,
-            sil_token=self.EMPTY_TOK,
-        )
-
-        beam_search_results = beam_search(log_probs, log_probs_length)
-        res = []
-        for beam_result in beam_search_results:
-            res.append(beam_result[0].tokens)
-        return res
+    def ctc_beam_search_lm(self, log_probs, beam_size=100):
+        if isinstance(log_probs, torch.Tensor):
+            log_probs = log_probs.detach().cpu().numpy()
+        return self.decoder.decode(log_probs, beam_size)
 
     def ctc_decode(self, inds) -> str:
         """
