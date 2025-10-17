@@ -74,10 +74,16 @@ python3 train.py -cn=CONFIG_NAME HYDRA_CONFIG_ARGUMENTS
 
 Where `CONFIG_NAME` is a config from `src/configs` and `HYDRA_CONFIG_ARGUMENTS` are optional arguments.
 
-To run inference (evaluate the model or save predictions):
+Download lm model and conformer weights via:
 
 ```bash
-python3 inference.py HYDRA_CONFIG_ARGUMENTS
+python download_weights_and_lm.py
+```
+
+To run inference (evaluate the model with LM):
+
+```bash
+python inference.py -cn=inference-w_lm.yaml inferencer.from_pretrained="conformer_30m/checkpoint-epoch84.pth" text_encoder.lm_inf_path="language_models/4gram_lowercase.arpa"
 ```
 
 ## Model training
