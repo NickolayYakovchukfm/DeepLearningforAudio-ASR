@@ -82,10 +82,24 @@ python3 inference.py HYDRA_CONFIG_ARGUMENTS
 
 ## Model training
 
-For model reproduction you need to:
+For model reproduction you need to follow thit scheme:
 
 1. 50 epochs with batch size 32, epoch lenght 1000 on train-clean-100 dataset.
 2. 11 epochs with batch size 30, epoch lenght 1000 on train-other-500 dataset.
+3. 24 epochs with batch size 30, epoch lenght 1300, learning rate 5e-5 and max lr 1e-4 on train-other-500 dataset.
+
+If you need pretrained model, you can download weight from [HuggingFace](https://huggingface.co/NickolayFM/conformer-ASR/blob/main/checkpoint-epoch84.pth) using:
+
+```python
+from huggingface_hub import hf_hub_download
+
+checkpoint_path = hf_hub_download(
+    repo_id="NickolayFM/conformer-ASR",
+    filename="checkpoint-epoch84.pth",
+    local_dir="./<dir_to_save>"
+)
+print("Checkpoint saved at:", checkpoint_path)
+```
 
 ## Credits
 
