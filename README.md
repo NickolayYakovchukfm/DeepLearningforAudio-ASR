@@ -2,6 +2,7 @@
 
 <p align="center">
   <a href="#about">About</a> •
+  <a href="#quality">Quality</a> •
   <a href="#installation">Installation</a> •
   <a href="#how-to-use">How To Use</a> •
   <a href="#credits">Credits</a> •
@@ -10,9 +11,18 @@
 
 ## About
 
-This repository contains a template for solving ASR task with PyTorch. This template branch is a part of the [HSE DLA course](https://github.com/markovka17/dla) ASR homework. Some parts of the code are missing (or do not follow the most optimal design choices...) and students are required to fill these parts themselves (as well as writing their own models, etc.).
+Repository includes implementation of CTC-based Conformer. Conformer model based on [paper](https://arxiv.org/pdf/2005.08100). CTC realization based on lectures from [DLA course](https://github.com/markovka17/dla/). Also pipeline includes LM inference for pretrained Conformer, LM implementation based on example from [PYPI lib](https://pypi.org/project/pyctcdecode/). Framework based on Hydra config system and logging in cometml or wandb.
 
 See the task assignment [here](https://github.com/markovka17/dla/tree/2024/hw1_asr).
+
+## Quality
+
+Below is the table for **CTC**-based submissions.
+
+| Dataset           | CER  | WER  | CER BeamSearch | WER BeamSearch | CER LM | WER LM | BeamSize |
+|-------------------|------|------|----------------|----------------|--------|--------|----------|
+| libri-test-clear  | 0.07 | 0.22 | 0.06           | 0.21           | 0.04   | 0.11   | 50       |
+| libri-test-other  | 0.17 | 0.43 | ---            | ---            | 0.13   | 0.28   | 100      |
 
 ## Installation
 
@@ -69,6 +79,13 @@ To run inference (evaluate the model or save predictions):
 ```bash
 python3 inference.py HYDRA_CONFIG_ARGUMENTS
 ```
+
+## Model training
+
+For model reproduction you need to:
+
+1. 50 epochs with batch size 32, epoch lenght 1000 on train-clean-100 dataset.
+2. 11 epochs with batch size 30, epoch lenght 1000 on train-other-500 dataset.
 
 ## Credits
 
