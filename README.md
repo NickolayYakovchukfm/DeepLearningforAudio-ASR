@@ -5,6 +5,8 @@
   <a href="#quality">Quality</a> •
   <a href="#installation">Installation</a> •
   <a href="#how-to-use">How To Use</a> •
+  <a href="#model-training">Model Training</a> •
+  <a href="#custom-dataset-inference">Custom dataset inference</a> •
   <a href="#credits">Credits</a> •
   <a href="#license">License</a>
 </p>
