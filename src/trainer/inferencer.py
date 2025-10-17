@@ -25,6 +25,7 @@ class Inferencer(BaseTrainer):
         metrics=None,
         batch_transforms=None,
         skip_model_load=False,
+        save_predictions=False,
     ):
         """
         Initialize the Inferencer.
@@ -62,6 +63,7 @@ class Inferencer(BaseTrainer):
         self.batch_transforms = batch_transforms
 
         self.text_encoder = text_encoder
+        self.save_predictions = save_predictions
 
         # define dataloaders
         self.evaluation_dataloaders = {k: v for k, v in dataloaders.items()}
@@ -150,16 +152,30 @@ class Inferencer(BaseTrainer):
             pred_text = self.text_encoder.ctc_beam_search_lm(
                 log_probs[:log_probs_length]
             )
+            if self.save_predictions and "utterance_id" in batch:
+                pred_dir = self.save_path / f"{part}_preds"
+                pred_dir.mkdir(exist_ok=True, parents=True)
 
+            if "utterance_id" in batch and i < len(batch["utterance_id"]):
+                utterance_id = batch["utterance_id"][i]
+            else:
+                utterance_id = f"utt_{batch_idx}_{i}"
             output = {
                 "prediction": pred_text,
                 "text": text,
+                "utterance_id": utterance_id,
             }
 
             if self.save_path is not None:
                 # you can use safetensors or other lib here
                 torch.save(output, self.save_path / part / "output.pth")
-
+            if self.save_predictions and self.save_path is not None:
+                pred_dir = self.save_path / f"{part}_predictions"
+                gt_dir = self.save_path / f"{part}_ground_truth"
+                pred_dir.mkdir(exist_ok=True, parents=True)
+                gt_dir.mkdir(exist_ok=True, parents=True)
+                (pred_dir / f"{utterance_id}.txt").write_text(pred_text)
+                (gt_dir / f"{utterance_id}.txt").write_text(text)
         return batch
 
     def _inference_part(self, part, dataloader):
