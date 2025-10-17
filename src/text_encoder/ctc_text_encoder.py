@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 from string import ascii_lowercase
 
 import torch
@@ -93,6 +94,43 @@ class CTCTextEncoder:
             prev_symb = current
             text += self.ind2char[current]
         return text
+
+    def expand_and_merge_beams(self, dp, cur_step_prob, ind2char):
+        new_dp = defaultdict(float)
+
+        for (pref, prev_char), pref_proba in dp.items():
+            for idx, char in ind2char.items():
+                cur_proba = pref_proba * cur_step_prob[idx]
+                cur_char = char
+
+                if char == self.EMPTY_TOK:
+                    cur_pref = pref
+                else:
+                    if prev_char != char:
+                        cur_pref = pref + char
+                    else:
+                        cur_pref = pref
+
+                new_dp[(cur_pref, cur_char)] += cur_proba
+        return new_dp
+
+    def truncate_beams(self, dp, beam_size):
+        return dict(
+            sorted(list(dp.items()), key=lambda x: x[1], reverse=True)[:beam_size]
+        )
+
+    def ctc_beam_search_from_scratch(self, probs, beam_size):
+        dp = {
+            ("", self.EMPTY_TOK): 1.0,
+        }
+        for cur_step_prob in probs:
+            dp = self.expand_and_merge_beams(dp, cur_step_prob, self.ind2char)
+            dp = self.truncate_beams(dp, beam_size)
+
+        result = [
+            {"pref": pref} for (pref, _), _ in sorted(dp.items(), key=lambda x: -x[1])
+        ][0]
+        return result["pref"]
 
     @staticmethod
     def normalize_text(text: str):

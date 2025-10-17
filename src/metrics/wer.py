@@ -46,6 +46,10 @@ class WER(BaseMetric):
                 pred_text = self.text_encoder.ctc_beam_search_lm(
                     log_proba[:log_proba_length]
                 )
+            elif self.search_by == "from_scratch":
+                pred_text = self.text_encoder.ctc_beam_search_from_scratch(
+                    log_proba[:log_proba_length], beam_size=50
+                )
             else:
                 pred_text = self.text_encoder.ctc_beam_search(
                     log_proba[:log_proba_length]
