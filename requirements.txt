@@ -18,3 +18,4 @@ datasets
 black
 isort
 pre-commit
+huggingface_hub

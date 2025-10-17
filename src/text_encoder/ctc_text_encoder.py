@@ -5,6 +5,8 @@ import torch
 from pyctcdecode import build_ctcdecoder
 from torchaudio.models import decoder
 
+from download_lm import fetch_conformer_model_weights, fetch_language_model
+
 
 class CTCTextEncoder:
     EMPTY_TOK = ""
@@ -15,7 +17,8 @@ class CTCTextEncoder:
             alphabet (list): alphabet for language. If None, it will be
                 set to ascii
         """
-
+        fetch_conformer_model_weights()
+        fetch_language_model()
         if alphabet is None:
             alphabet = list(ascii_lowercase + " ")
 
