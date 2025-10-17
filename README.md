@@ -107,6 +107,18 @@ checkpoint_path = hf_hub_download(
 print("Checkpoint saved at:", checkpoint_path)
 ```
 
+## Custom dataset inference
+
+For inference you need:
+```bash
+python inference.py -cn=custom_dataset_inf datasets.test.data_dir=<YOUR PATH> dataloader.batch_size=2
+```
+
+For metrics calc:
+```bash
+python calculate_metrics_cer_wer.py --gt_dir <YOUR PATH to gt> --pred_dir <YOUR PATH to predictions>
+```
+
 ## Credits
 
 This repository is based on a [PyTorch Project Template](https://github.com/Blinorot/pytorch_project_template).
